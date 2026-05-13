@@ -1,0 +1,215 @@
+
+
+@{
+    ViewData["Title"] = "Middle Earth Trading - Orta Dünya'nın Ticaret Destanı";
+}
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=IM+Fell+Double+Pica:ital@0;1&family=MedievalSharp&display=swap" rel="stylesheet">
+
+<div class="main-header">
+    <nav class="navbar container">
+        <div class="logo">Middle Earth Trading</div>
+        <ul class="nav-links">
+            <li><a href="#" class="nav-modal-link" data-modal="modal-home">Home</a></li>
+            <li><a href="#" class="nav-modal-link" data-modal="modal-about">About</a></li>
+            <li><a href="#" class="nav-modal-link" data-modal="modal-how">How to Play?</a></li>
+            <li><a href="#" class="nav-modal-link" data-modal="modal-universe">Universe</a></li>
+        </ul>
+        <div class="auth-buttons" id="auth-buttons-container" style="display:flex; gap: 10px;">
+            <button class="btn btn-login" id="openLoginModal">Login</button>
+            <button class="btn btn-register">Register</button>
+        </div>
+    </nav>
+</div>
+
+<!-- Login Modal -->
+<div id="loginModal" class="login-modal-overlay">
+    <div class="login-modal-content">
+        <span class="login-modal-close">&times;</span>
+        <div class="login-modal-header">
+            <img src="/images/lotro-logo.png" alt="Middle Earth Trading" class="login-logo" />
+            <h2 class="login-title">Login</h2>
+        </div>
+        <form class="login-form">
+            <label for="login-username">Username</label>
+            <input type="text" id="login-username" name="username" autocomplete="username" required />
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" name="password" autocomplete="current-password" required />
+            <button type="submit" class="btn btn-login btn-login-modal">Login</button>
+            <div id="loginResult" style="margin-top:10px; text-align:center; font-size:1.2rem;"></div>
+        </form>
+    </div>
+</div>
+
+<!-- Modals for Navbar Links -->
+<div id="modal-home" class="custom-modal-overlay">
+    <div class="custom-modal-content">
+        <span class="custom-modal-close">&times;</span>
+        <h2 class="modal-title">Home</h2>
+        <p>Welcome to Middle Earth Trading! Step into the greatest trade epic of Middle Earth and start your struggle for wealth.</p>
+    </div>
+</div>
+<div id="modal-about" class="custom-modal-overlay">
+    <div class="custom-modal-content">
+        <span class="custom-modal-close">&times;</span>
+        <h2 class="modal-title">About the Game</h2>
+        <p>This game is a trading simulation set in J.R.R. Tolkien's universe. Choose a nation, analyze the market, and become the richest merchant!</p>
+    </div>
+</div>
+<div id="modal-how" class="custom-modal-overlay">
+    <div class="custom-modal-content">
+        <span class="custom-modal-close">&times;</span>
+        <h2 class="modal-title">How to Play?</h2>
+        <ul class="modal-list">
+            <li>Choose your nation and use its advantages.</li>
+            <li>Follow the market, buy low and sell high.</li>
+            <li>Be strategic against events and rivals.</li>
+        </ul>
+    </div>
+</div>
+<div id="modal-universe" class="custom-modal-overlay">
+    <div class="custom-modal-content">
+        <span class="custom-modal-close">&times;</span>
+        <h2 class="modal-title">Middle Earth Universe</h2>
+        <p>Set in the late Third Age, Sauron's rise and great wars affect the economy and trade routes.</p>
+    </div>
+</div>
+
+<!-- Hero Section (Sadece bu kalsın, tam ekran ortalı) -->
+<section id="hero-section" class="hero hero-center">
+    <div class="hero-content hero-content-center">
+        <h1 class="hero-title">Middle Earth Trading</h1>
+        <p class="hero-subtitle">The Greatest Trade Epic of Middle Earth: Fight for Wealth and Power!</p>
+        <div class="hero-buttons">
+            <button class="btn btn-login" id="openLoginModal2">Play Now</button>
+            <a href="/Home/Trader" class="btn btn-register">Continue as Guest</a>
+        </div>
+    </div>
+</section>
+
+<!-- Axios and api.js are loaded from _Layout -->
+<script>
+    function setCookie(name, value, days) {
+        let expires = '';
+        if (typeof days === 'number') {
+            const d = new Date();
+            d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = '; expires=' + d.toUTCString();
+        }
+        const secure = location.protocol === 'https:' ? '; Secure' : '';
+        document.cookie = name + '=' + encodeURIComponent(value) + expires + '; path=/' + '; SameSite=Lax' + secure;
+    }
+
+    function getCookie(name) {
+        const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'));
+        return match ? decodeURIComponent(match[1]) : null;
+    }
+
+    // Otomatik giriş kaldırıldı: Ana sayfa her zaman görüntülenecek.
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.querySelector('.login-form');
+        if (!loginForm) return;
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            try {
+                const response = await api.post('/api/Users/login', {
+                    username: username,
+                    password: password
+                });
+                if (response.data && (response.data.success === true)) {
+                    document.getElementById('loginResult').innerHTML = '<span style="color:#22c55e;font-weight:bold;font-size:1.3rem;">Login successful! Redirecting...</span>';
+                    try{ localStorage.setItem('id', response.data.id); }catch(e){}
+                    // Şifreyi şifrelenmiş olarak cookie'de sakla
+                    setEncryptedCookie('met_username', username, 30);
+                    setEncryptedCookie('met_password', password, 30);
+                    setTimeout(function() {
+                        window.location.href = '/Profile';
+                    }, 1000);
+                } else {
+                    document.getElementById('loginResult').innerHTML = '<span style="color:#eab308;">Invalid username or password!</span>';
+                }
+            } catch (error) {
+                document.getElementById('loginResult').innerHTML = '<span style="color:#ef4444;">Login failed: ' + (error.response ? error.response.data.message || error.response.data : error.message) + '</span>';
+            }
+        });
+    });
+</script>
+
+<script>
+    // Login Modal açma/kapama
+    function openLoginModal() {
+        document.getElementById('loginModal').classList.add('active');
+    }
+    function closeLoginModal() {
+        document.getElementById('loginModal').classList.remove('active');
+    }
+    document.getElementById('openLoginModal').onclick = openLoginModal;
+    var openLoginModal2 = document.getElementById('openLoginModal2');
+    if(openLoginModal2) openLoginModal2.onclick = async function(){
+        // Çerezlerde şifreli bilgiler varsa doğrudan oyuna al
+        var encUser = getCookie('met_username');
+        var encPass = getCookie('met_password');
+        if (encUser && encPass && window.getDecryptedCookie) {
+            try {
+                var username = await window.getDecryptedCookie('met_username');
+                var password = await window.getDecryptedCookie('met_password');
+                if (username && password) {
+                    const response = await api.post('/api/Users/login', { username, password });
+                    if (response.data && (response.data.success === true)) {
+                        try{ localStorage.setItem('id', response.data.id); }catch(e){}
+                        window.location.href = '/Profile';
+                        return;
+                    }
+                }
+            } catch(e) {}
+        }
+        // Aksi halde login modalını aç
+        openLoginModal();
+    };
+    document.querySelector('.login-modal-close').onclick = closeLoginModal;
+    document.getElementById('loginModal').addEventListener('click', function(e) {
+        if (e.target === this) closeLoginModal();
+    });
+    window.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeLoginModal();
+    });
+
+    // Navbar modal açma
+    document.querySelectorAll('.nav-modal-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const modalId = this.getAttribute('data-modal');
+            document.querySelectorAll('.custom-modal-overlay').forEach(m => m.classList.remove('active'));
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.add('active');
+        });
+    });
+    // Modal kapama
+    document.querySelectorAll('.custom-modal-close').forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.closest('.custom-modal-overlay').classList.remove('active');
+        });
+    });
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.custom-modal-overlay').forEach(m => m.classList.remove('active'));
+        }
+    });
+    document.querySelectorAll('.custom-modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('active');
+        });
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+    const API_BASE_URL = "@ViewBag.ApiBaseUrl";
+    console.log("API Base URL:", API_BASE_URL);
+    const api = axios.create({
+        baseURL: API_BASE_URL
+    });
+</script>

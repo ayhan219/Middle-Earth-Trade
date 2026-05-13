@@ -1,0 +1,83 @@
+body {
+    font-family: 'Cinzel', serif;
+    /* Görsel görünür, üstte yarı saydam gradient katmanı */
+    background-image: linear-gradient(135deg, rgba(26,26,26,0.75) 0%, rgba(42,42,42,0.6) 50%, rgba(31,31,31,0.75) 100%), url('/images/trader-bg.jpg');
+    background-size: cover, cover;
+    background-position: center, center;
+    background-repeat: no-repeat, no-repeat;
+    position: relative;
+}
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(circle at 20% 80%, rgba(101, 67, 33, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(139, 69, 19, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+.gold-text {
+    background: linear-gradient(45deg, #d4af37, #e6c547, #d4af37);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.material-card {
+    background: linear-gradient(135deg, rgba(101, 67, 33, 0.2), rgba(139, 69, 19, 0.15));
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(184, 134, 11, 0.4);
+    box-shadow: 
+        inset 0 1px 0 rgba(212, 175, 55, 0.15),
+        0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+.material-card:hover {
+    background: linear-gradient(135deg, rgba(101, 67, 33, 0.25), rgba(139, 69, 19, 0.2));
+    border-color: rgba(212, 175, 55, 0.6);
+    transform: translateY(-2px);
+    box-shadow: 
+        inset 0 1px 0 rgba(212, 175, 55, 0.2),
+        0 8px 30px rgba(184, 134, 11, 0.15);
+}
+.price-up {
+    color: #10b981;
+    animation: pulse 2s infinite;
+}
+.price-down {
+    color: #ef4444;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+.event-card {
+    background: linear-gradient(135deg, rgba(101, 67, 33, 0.6), rgba(139, 69, 19, 0.5));
+    border: 2px solid rgba(184, 134, 11, 0.7);
+    box-shadow: 
+        inset 0 2px 0 rgba(212, 175, 55, 0.2),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.2),
+        0 6px 25px rgba(0, 0, 0, 0.4);
+    position: relative;
+}
+.event-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 2px,
+            rgba(139, 69, 19, 0.1) 2px,
+            rgba(139, 69, 19, 0.1) 4px
+        );
+    pointer-events: none;
+} 

@@ -1,0 +1,667 @@
+
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    const API_BASE_URL = "@ViewBag.ApiBaseUrl";
+    console.log("API Base URL:", API_BASE_URL);
+    const api = axios.create({
+        baseURL: API_BASE_URL
+    });
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="~/css/trader.css" asp-append-version="true">
+
+<!-- Üst navbar kullanılıyor; bu buton kaldırıldı -->
+
+<div class="container mx-auto px-4 py-8" style="margin-top:96px;">
+    <!-- Header -->
+    <div class="text-center mb-12">
+        <div class="flex items-center justify-center mb-4">
+            <span class="text-4xl mr-4">⚔️</span>
+            <h1 class="text-5xl font-bold gold-text">🏰 Middle Earth Market</h1>
+            <span class="text-4xl ml-4">⚔️</span>
+        </div>
+        <div class="flex items-center justify-center mb-6">
+            <span class="text-2xl text-yellow-600">◆</span>
+            <span class="text-2xl text-yellow-500 mx-2">◇</span>
+            <span class="text-2xl text-yellow-600">◆</span>
+        </div>
+        <p class="text-xl text-amber-200">Lord of the Rings Stock Market Game</p>
+        <p class="text-sm text-amber-300 mt-2 italic">"One Ring to rule them all, One Ring to find them..."</p>
+    </div>
+    <!-- Events Section -->
+    <div class="grid md:grid-cols-2 gap-8 mb-12">
+        <!-- Previous Event -->
+        <div class="event-card rounded-lg p-6">
+            <h2 class="text-2xl font-bold gold-text mb-4">📜 Current Event</h2>
+            <div class="bg-black bg-opacity-30 rounded-lg p-4">
+                <h3 id="eventTitle" class="text-xl font-semibold text-yellow-300 mb-2">Loading...</h3>
+                <p id="eventDescription" class="text-gray-300 mb-3">Loading...</p>
+                <div class="text-sm text-gray-400">
+                    <span>Happening now...</span>
+                </div>
+              
+            </div>
+        </div>
+        <!-- Next Event -->
+        <div class="event-card rounded-lg p-6">
+            <h2 class="text-2xl font-bold gold-text mb-4">🔮 Upcoming Event</h2>
+            <div class="bg-black bg-opacity-30 rounded-lg p-4">
+                <h3 id="eventTitle2" class="text-xl font-semibold text-blue-300 mb-2">Loading...</h3>
+                <p id="eventDescription2" class="text-gray-300 mb-3">Loading...</p>
+                <div class="text-sm text-gray-400">
+                    <span>⏰ Starting very soon</span>
+                </div>
+                <div class="mt-3 text-sm">
+                    <div class="mt-3 text-sm" id="affectedMaterialsContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Market Table -->
+    <div class="material-card rounded-lg p-6">
+        <h2 class="text-3xl font-bold gold-text mb-6 text-center">💰 Market Prices</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="border-b-2 border-gray-600 bg-gradient-to-r from-gray-800 to-gray-700">
+                        <th class="py-4 px-6 text-amber-200 font-bold">⚱️ Material</th>
+                        <th class="py-4 px-6 text-amber-200 font-bold">🏛️ Selling Nation</th>
+                        <th class="py-4 px-6 text-amber-200 font-bold">💰 Current Price</th>
+                        <th class="py-4 px-6 text-amber-200 font-bold">📊 Change</th>
+                        <th class="py-4 px-6 text-amber-200 font-bold">📦 Stock</th>
+                        <th class="py-4 px-6 text-amber-200 font-bold">⚔️ Action</th>
+                    </tr>
+                </thead>
+                <tbody id="materialTable">
+                    <!-- Materials will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- Player Stats -->
+    <div class="mt-8 text-center">
+        <div class="material-card rounded-lg p-8 inline-block border-2 border-gray-600">
+            <div class="flex items-center justify-center mb-6">
+                <span class="text-2xl mr-2">⚜️</span>
+                <h3 class="text-2xl font-bold gold-text">👑 Player Status</h3>
+                <span class="text-2xl ml-2">⚜️</span>
+            </div>
+            <div class="grid grid-cols-3 gap-8">
+                <div class="text-center border-r border-gray-600 pr-6">
+                    <div class="text-3xl mb-2">💰</div>
+                    <div class="text-2xl font-bold text-amber-400" id="playerGold">2,450</div>
+                    <div class="text-sm text-gray-300">Gold Coins</div>
+                </div>
+                <div class="text-center border-r border-gray-600 pr-6">
+                    <div class="text-3xl mb-2">📊</div>
+                    <div class="text-2xl font-bold text-blue-300" id="portfolioValue">8,750</div>
+                    <div class="text-sm text-gray-300">Portfolio Value</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl mb-2">⚖️</div>
+                    <div class="text-2xl font-bold text-green-300" id="totalProfit">+1,200</div>
+                    <div class="text-sm text-gray-300">Total Profit</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Trade Modal -->
+<div id="tradeModal" class="fixed inset-0 z-50 hidden">
+	<div class="absolute inset-0 bg-black bg-opacity-60" onclick="closeTradeModal()"></div>
+	<div class="relative max-w-md mx-auto mt-40 material-card rounded-lg p-6 border-2 border-gray-600 bg-gray-900">
+		<h3 id="tradeModalTitle" class="text-2xl font-bold gold-text">Trade</h3>
+		<div class="mt-4">
+			<div id="tradeModalMaterialInfo" class="text-sm text-gray-300">Material info</div>
+			<div class="mt-4">
+				<label for="tradeQuantityInput" class="block text-sm text-amber-200 mb-1">Quantity</label>
+				<input id="tradeQuantityInput" type="number" min="1" value="1" class="w-full px-3 py-2 rounded-md bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-600" />
+				<div id="tradeTotalInfo" class="text-sm text-gray-400 mt-2"></div>
+			</div>
+		</div>
+		<div class="mt-6 flex justify-end space-x-2">
+			<button class="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold" onclick="closeTradeModal()">Cancel</button>
+			<button class="px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-sm font-semibold" onclick="confirmTrade()">Confirm</button>
+		</div>
+	</div>
+</div>
+<!-- Alert Modal -->
+<div id="alertModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black bg-opacity-60" onclick="closeAlert()"></div>
+    <div class="relative max-w-md mx-auto mt-40 material-card rounded-lg p-6 border-2 border-gray-600 bg-gray-900">
+        <h3 class="text-2xl font-bold gold-text">Warning</h3>
+        <div id="alertMessage" class="mt-4 text-gray-200"></div>
+        <div class="mt-6 flex justify-end">
+            <button class="px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-sm font-semibold" onclick="closeAlert()">OK</button>
+        </div>
+    </div>
+    </div>
+<script>
+    let materials = [];
+    let playerGold = 2450;
+    let playerInventory = {};
+    
+    function getMaterialIcon(name){
+        const n = (name || '').toLowerCase();
+        // Genel türler önce
+        if (n.includes('harita') || n.includes('map')) return '🗺️';
+        if (n.includes('kitap') || n.includes('book') || n.includes('mazarbul') || n.includes('yazıt') || n.includes('yazit') || n.includes('iskenderun')) return '📜';
+        if (n.includes('zırh') || n.includes('zirh') || n.includes('armor') || n.includes('gömlek') || n.includes('gomlek') || n.includes('chain')) return '🛡️';
+        if (n.includes('sword') || n.includes('kılıç') || n.includes('kilic') || n.includes('glamdring') || n.includes('narsil') || n.includes('andúril') || n.includes('anduril') || n.includes('sting') || n.includes('stıng') || n.includes('orcrist') || n.includes('orcrıst')) return '🗡️';
+        if (n.includes('elf') && (n.includes('pelerini') || n.includes('cloak'))) return '🧝';
+        if (n.includes('elf') && (n.includes('yay') || n.includes('bow'))) return '🏹';
+        if (n.includes('vilya')) return '💠';
+        if (n.includes('narya')) return '🔥';
+        if (n.includes('silmaril')) return '💎';
+        if (n.includes('mithril')) return '⚔️';
+        if (n.includes('palant')) return '🔮';
+        if ((n.includes('dokuz') && n.includes('yüzük')) || (n.includes('tek') && n.includes('yüzük')) || (n.includes('yedi') && n.includes('yüzük')) || n.includes('ring')) return '💍';
+        if (n.includes('gümüş') || n.includes('silver')) return '🥈';
+        if (n.includes('altın') || n.includes('altin') || n.includes('gold')) return '🪙';
+        if (n.includes('lembas')) return '🥖';
+        if (n.includes('dark') && n.includes('flame')) return '🔥';
+        if (n.includes('dragon')) return '🐉';
+        if (n.includes('nenya')) return '💠';
+        if (n.includes('arkenstone')) return '💎';
+        if (n.includes('miruvor') || n.includes('mıruvor')) return '🍷';
+        if (n.includes('healing') || n.includes('herb') || n.includes('ent-dalma') || n.includes('ent')) return '🌿';
+        return '📦';
+    }
+    
+    let tradeAction = null;
+    let tradeMaterialIndex = null;
+
+    async function fetchMaterials() {
+        try {
+            const response = await api.get('/api/material'); 
+            materials = response.data;
+            renderMaterials();
+        } catch (error) {
+            console.error("Could not fetch materials:", error);
+            showNotification("Could not fetch data from server.", 'error');
+        }
+    }
+
+    function openTradeModal(action, index) {
+        tradeAction = action;
+        tradeMaterialIndex = index;
+        const material = materials[index];
+        const title = action === 'buy' ? 'Buy' : 'Sell';
+        document.getElementById('tradeModalTitle').textContent = title;
+        document.getElementById('tradeModalMaterialInfo').textContent = `${material.name} — Price: ${material.currentPrice} gold \u2022 Stock: ${material.availableStock}`;
+        const qtyInput = document.getElementById('tradeQuantityInput');
+        qtyInput.value = 1;
+        qtyInput.min = 1;
+        qtyInput.max = action === 'buy' ? material.availableStock : 1_000_000_000; // satış için mevcut envanter bilgisi yoksa sınırsız bırak
+        qtyInput.oninput = updateTradeTotal;
+        updateTradeTotal();
+        document.getElementById('tradeModal').classList.remove('hidden');
+    }
+
+    function closeTradeModal() {
+        document.getElementById('tradeModal').classList.add('hidden');
+    }
+
+    function updateTradeTotal() {
+        const qty = parseInt(document.getElementById('tradeQuantityInput').value) || 0;
+        const material = materials[tradeMaterialIndex] || { currentPrice: 0 };
+        const total = qty * (material.currentPrice || 0);
+        const text = tradeAction === 'sell' ? `Total revenue: ${total} gold` : `Total cost: ${total} gold`;
+        document.getElementById('tradeTotalInfo').textContent = text;
+    }
+
+    async function confirmTrade() {
+        const qtyRaw = document.getElementById('tradeQuantityInput').value;
+        const quantity = parseInt(qtyRaw);
+        if (!quantity || isNaN(quantity) || quantity <= 0) {
+            showNotification('Enter a valid quantity.', 'error');
+            return;
+        }
+        // Stok kontrolü (satın alma)
+        if (tradeAction === 'buy') {
+            const material = materials[tradeMaterialIndex];
+            if (quantity > material.availableStock) {
+                showAlert('The requested quantity exceeds available stock. Please enter a lower quantity.');
+                return;
+            }
+            // Bakiye kontrolü (satın alma)
+            const totalCost = quantity * (material.currentPrice || 0);
+            if (typeof playerGold === 'number' && totalCost > playerGold) {
+                showAlert('Insufficient gold balance. Please reduce the quantity or earn more gold.');
+                return;
+            }
+        }
+        await executeTrade(tradeAction, tradeMaterialIndex, quantity);
+    }
+
+    async function executeTrade(action, index, quantity) {
+        try {
+            const playerId = localStorage.getItem('id');
+            if (!playerId) {
+                showNotification('You must be logged in!', 'error');
+                return;
+            }
+
+            const material = materials[index];
+            const url = action === 'sell' ? `/api/Material/sell` : `/api/Material/buy`;
+            const payload = { userId: playerId, materialId: material.id, quantity };
+
+            const response = await api.post(url, payload, { headers: { 'Content-Type': 'application/json' } });
+
+            if (response.status === 200) {
+                const successMsg = action === 'sell'
+                    ? `Successfully sold ${quantity} of ${material.name}!`
+                    : `Successfully bought ${quantity} of ${material.name}!`;
+                showNotification(successMsg, 'success');
+                getProfileData();
+                fetchMaterials();
+                closeTradeModal();
+            } else {
+                showNotification('Action failed!', 'error');
+            }
+        } catch (error) {
+            console.error('Trade error:', error);
+            const msg = getFriendlyErrorMessage(error);
+            showAlert(msg);
+        }
+    }
+
+    function getFriendlyErrorMessage(error) {
+        try {
+            const data = error && error.response ? error.response.data : null;
+            if (data) {
+                if (typeof data === 'string') {
+                    const lower = data.toLowerCase();
+                    if (lower.includes('not enough gold') || lower.includes('insufficient') || lower.includes('yetersiz')) {
+                        return 'Insufficient gold balance. Please reduce the quantity or earn more gold.';
+                    }
+                    if (lower.includes('out of stock') || lower.includes('stock') || lower.includes('available')) {
+                        return 'The requested quantity is out of stock.';
+                    }
+                } else if (typeof data === 'object' && data.message) {
+                    return String(data.message);
+                }
+            }
+        } catch {}
+        return 'The action could not be completed. Please try again.';
+    }
+
+    function showAlert(message) {
+        const modal = document.getElementById('alertModal');
+        const msg = document.getElementById('alertMessage');
+        msg.textContent = message;
+        modal.classList.remove('hidden');
+    }
+
+    function closeAlert() {
+        document.getElementById('alertModal').classList.add('hidden');
+    }
+
+    function renderMaterials() {
+        console.log("materyal cekiliyor");
+        const tableBody = document.getElementById('materialTable');
+        tableBody.innerHTML = '';
+        materials.forEach((material, index) => {
+            const change = material.priceChangePercentage;
+            const changeClass = change > 0 ? 'price-up' : change < 0 ? 'price-down' : 'text-gray-400';
+            const changeSymbol = change > 0 ? '↗️' : change < 0 ? '↘️' : '⏸️';
+            const row = document.createElement('tr');
+            row.className = 'border-b border-gray-600 hover:bg-white hover:bg-opacity-5 transition-colors';
+            row.innerHTML = `
+                <td class="py-4 px-6">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-2xl">${getMaterialIcon(material.name)}</span>
+                        <div>
+                            <div class="font-semibold text-white">${material.name}</div>
+                            <div class="text-sm text-gray-400">${material.description}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="py-4 px-6">
+                    <span class="text-blue-300 font-semibold">${material.nationName}</span>
+                </td>
+                <td class="py-4 px-6">
+                    <span class="text-xl font-bold text-yellow-400">${material.currentPrice}</span>
+                    <span class="text-sm text-gray-400 ml-1">gold</span>
+                </td>
+                <td class="py-4 px-6">
+                    <span class="${changeClass} font-bold">
+                        ${changeSymbol} ${Math.abs(change).toFixed(1)}%
+                    </span>
+                </td>
+                <td class="py-4 px-6">
+                    <span class="text-gray-300">${material.availableStock} in stock</span>
+                </td>
+                <td class="py-4 px-6">
+                    <div class="flex space-x-2">
+                        <button onclick="buyMaterial(${index})"
+                                class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+                            Buy
+                        </button>
+                        <button onclick="sellMaterial(${index})"
+                                class="hidden bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+                            Sell
+                        </button>
+                    </div>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    let events = [];
+    const EVENT_MATERIAL_MAP = {
+        "9163D3CB-88C2-45FB-AC91-04742439AB26": ["Silmaril", "Elf Pelerini", "Dokuz yüzük", "Gümüş"],
+        "D221CC2F-9061-4769-BF8C-0AD388FF44B5": ["Narsil", "Thor Haritasi", "Palantir", "Ent-Dalma"],
+        "F28B297F-8A2F-4B7D-91FF-0DAAA94684AF": ["Silmaril", "Elf Pelerini", "Mithril Armor", "Dragon Scale"],
+        "31524E47-CBD3-4D46-BE9C-163A847264D7": ["Silmaril", "Gümüş", "Nenya", "Dark Flame"],
+        "1B452D9F-AFBA-4CCE-97E6-256C28565BB7": ["Silmaril", "Dokuz yüzük", "Tek yüzük"],
+        "40DA64AE-4304-48E1-AFE0-29C603EA8319": ["Mithril Armor", "Narsil", "Glamdring", "Healing Orb"],
+        "3CE7A51E-377B-4EFA-A407-350EDCC480DA": ["Lembas ekmeği", "Ent-Dalma", "Thor'un Haritası"],
+        "E7AC0442-209E-4943-879A-AE98D65B4990": ["Silmaril", "Nenya"]
+    };
+                    async function fetchEvents() {
+        try {
+            const response = await api.get('/api/GameEvent');
+            events = response.data;
+            console.log("response",response.data)
+
+            const now = new Date();
+
+            if (Array.isArray(events) && events.length > 0) {
+    
+                const sortedEvents = events.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+
+                const pastEvents = sortedEvents.filter(e => new Date(e.startDate) <= now);
+
+                    const currentEvent = sortedEvents.find(e => {
+      const start = new Date(e.startDate);
+      const end = new Date(e.endDate);
+      return start <= now && now <= end;
+    });
+
+                const upcomingEvents = sortedEvents.filter(e => new Date(e.startDate) > now);
+                const nextEvent = upcomingEvents.length > 0 ? upcomingEvents[0] : null;
+                if (currentEvent) {
+                    document.getElementById('eventTitle').textContent = currentEvent.name;
+                    document.getElementById('eventDescription').textContent = currentEvent.description;
+                } else {
+                    document.getElementById('eventTitle').textContent = "No current event happening";
+                    document.getElementById('eventDescription').textContent = "";
+                }
+
+                    const affectedMaterialsContainer = document.getElementById('affectedMaterialsContainer');
+
+    if (nextEvent) {
+        document.getElementById('eventTitle2').textContent = nextEvent.name;
+        document.getElementById('eventDescription2').textContent = nextEvent.description;
+
+        const key = String(nextEvent.id || '').toUpperCase();
+        const materials = EVENT_MATERIAL_MAP[key] || [];
+
+        affectedMaterialsContainer.innerHTML = materials.length > 0
+            ? `<span class="text-blue-400">📊 Affected: ${materials.join(', ')}</span>`
+            : `<span class="text-gray-400">📊 No affected materials found</span>`;
+
+    } else {
+        document.getElementById('eventTitle2').textContent = "No upcoming events found";
+        document.getElementById('eventDescription2').textContent = "";
+        affectedMaterialsContainer.innerHTML = "";
+    }
+
+            } else {
+                document.getElementById('eventTitle').textContent = "No event data";
+                document.getElementById('eventDescription').textContent = "";
+                document.getElementById('eventTitle2').textContent = "";
+                document.getElementById('eventDescription2').textContent = "";
+            }
+        } catch (error) {
+            console.error("Could not fetch events:", error);
+            showNotification("Could not fetch event data.", 'error');
+        }
+    }
+
+
+
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white font-semibold z-50 ${
+            type === 'success' ? 'bg-green-600' : 'bg-red-600'
+        }`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+        function getProfileData() {
+        try {
+            const playerId = localStorage.getItem("id"); 
+            console.log("Player ID:", playerId);
+            if (!playerId) {
+                console.warn("Player ID not found in localStorage.");
+                showNotification("Player ID not found, please log in.", "error");
+                return;
+            }
+
+            api.get(`/api/users/profile/${playerId}`)
+                .then(response => {
+                    const player = response.data;
+                    console.log("Oyuncu verisi:", player);
+
+                    if (player.gold !== undefined) {
+                        playerGold = player.gold;
+                        document.getElementById('playerGold').textContent = playerGold.toLocaleString();
+                    }
+
+                    if (player.portfolioValue !== undefined) {
+                        document.getElementById('portfolioValue').textContent = player.portfolioValue.toLocaleString();
+                    }
+
+                    if (player.totalProfit !== undefined) {
+                        document.getElementById('totalProfit').textContent =
+                            (player.totalProfit >= 0 ? "+" : "") + player.totalProfit.toLocaleString();
+                    }
+                })
+                .catch(error => {
+                    console.error("Could not fetch player data:", error);
+                    showNotification("Could not fetch player data.", "error");
+                });
+        } catch (err) {
+            console.error("Error in getProfileData:", err);
+            showNotification("An error occurred.", "error");
+        }
+    }
+
+
+             let lastProcessedEventId = null;
+
+    async function checkAndTriggerEvent() {
+      try {
+        const now = new Date();
+
+        if (!Array.isArray(events)) return;
+
+        const currentEvent = events.find(e => {
+          const start = new Date(e.startDate);
+          const end = e.endDate ? new Date(e.endDate) : new Date(8640000000000000);
+          return start <= now && now < end;
+        });
+        console.log("currentEvent", currentEvent);
+
+        if (currentEvent) {
+          if (currentEvent.alreadyHappened === true) {
+            console.log("Event zaten gerçekleşmiş, istek atılmayacak:", currentEvent.id);
+            lastProcessedEventId = currentEvent.id;
+            return;
+          }
+
+          if (lastProcessedEventId !== currentEvent.id) {
+            console.log("Yeni event başladı, POST isteği atılıyor:", currentEvent.id);
+
+                let payload = [];
+
+    if (currentEvent.id.toUpperCase() === "9163D3CB-88C2-45FB-AC91-04742439AB26") { // Alqualondë Katliamı
+      payload = [
+        { eventId: currentEvent.id.toUpperCase(), materialId: "1F9E4DC3-B08C-4DE6-8176-1CA0569A4B0C", priceModifierPercentage: 1.5 }, // Silmaril
+        { eventId: currentEvent.id.toUpperCase(), materialId: "86FC53F3-2DED-47AA-92C1-08C43AF9EEFA", priceModifierPercentage: 1.3 }, // Elf Pelerini
+        { eventId: currentEvent.id.toUpperCase(), materialId: "4AF36F26-55AE-43E0-8F4A-739627459398", priceModifierPercentage: 1.4 }, // Dokuz Yüzük
+        { eventId: currentEvent.id.toUpperCase(), materialId: "ABADC95C-606F-4CED-A014-8A04CA88ECBA", priceModifierPercentage: 0.8 }  // Gümüş
+      ];
+    }
+    else if (currentEvent.id.toUpperCase() === "D221CC2F-9061-4769-BF8C-0AD388FF44B5") { // Valinor’a Büyük Yolculuk
+      payload = [
+        { eventId: currentEvent.id.toUpperCase(), materialId: "50EAC2F5-E958-4D85-96BF-BD1ECF6EFCEF", priceModifierPercentage: 1.2 }, // Narsil/Andúril
+        { eventId: currentEvent.id.toUpperCase(), materialId: "49835307-624E-496E-9F4B-2F7BD303C9BE", priceModifierPercentage: 1.1 }, // Thor'un Haritası
+        { eventId: currentEvent.id.toUpperCase(), materialId: "7E4A6D9D-1B1D-4DA7-BE17-A3A4BE30A42A", priceModifierPercentage: 1.3 }, // Palantir
+        { eventId: currentEvent.id.toUpperCase(), materialId: "EA2BA953-8F05-4E09-91F9-B451B2E009EC", priceModifierPercentage: 0.9 }  // Ent-dalma
+      ];
+    }
+    else if (currentEvent.id.toUpperCase() === "F28B297F-8A2F-4B7D-91FF-0DAAA94684AF") { // Beren ve Lúthien’in Aşkı
+      payload = [
+        { eventId: currentEvent.id.toUpperCase(), materialId: "1F9E4DC3-B08C-4DE6-8176-1CA0569A4B0C", priceModifierPercentage: 1.8 }, // Silmaril
+        { eventId: currentEvent.id.toUpperCase(), materialId: "86FC53F3-2DED-47AA-92C1-08C43AF9EEFA", priceModifierPercentage: 1.2 }, // Elf Pelerini
+        { eventId: currentEvent.id.toUpperCase(), materialId: "AAB97162-0352-4278-AC46-42E9ADFF6480", priceModifierPercentage: 1.4 }, // Mithril Armor
+        { eventId: currentEvent.id.toUpperCase(), materialId: "59EEF381-B96E-4F40-A493-37D45E19FFEF", priceModifierPercentage: 1.3 }  // Dragon Scale
+      ];
+    }
+    else if (currentEvent.id.toUpperCase() === "31524E47-CBD3-4D46-BE9C-163A847264D7") { // İki Ağacın Yıkımı
+      payload = [
+        { eventId: currentEvent.id.toUpperCase(), materialId: "1F9E4DC3-B08C-4DE6-8176-1CA0569A4B0C", priceModifierPercentage: 1.7 }, // Silmaril
+        { eventId: currentEvent.id.toUpperCase(), materialId: "ABADC95C-606F-4CED-A014-8A04CA88ECBA", priceModifierPercentage: 1.2 }, // Gümüş
+        { eventId: currentEvent.id.toUpperCase(), materialId: "99A6B2B7-F315-44B4-8C24-D243E8BBA0C7", priceModifierPercentage: 1.5 }, // Dark Flame
+        { eventId: currentEvent.id.toUpperCase(), materialId: "A97C647D-13B0-40A6-8408-2F5727C3FA63", priceModifierPercentage: 1.1 }  // Nenya
+      ];
+    }
+    else if (currentEvent.id.toUpperCase() === "1B452D9F-AFBA-4CCE-97E6-256C28565BB7") { // Mandos’un Laneti
+      payload = [
+        { eventId: currentEvent.id.toUpperCase(), materialId: "1F9E4DC3-B08C-4DE6-8176-1CA0569A4B0C", priceModifierPercentage: 1.3 }, // Silmaril
+        { eventId: currentEvent.id.toUpperCase(), materialId: "4AF36F26-55AE-43E0-8F4A-739627459398", priceModifierPercentage: 1.2 }, // Dokuz Yüzük
+        { eventId: currentEvent.id.toUpperCase(), materialId: "C5831423-1AAF-485E-89F0-371A74AB6657", priceModifierPercentage: 1.1 }  // Tek Yüzük
+      ];
+    }
+    else if (currentEvent.id.toUpperCase() === "40DA64AE-4304-48E1-AFE0-29C603EA8319") { // Gondolin’in Düşüşü
+      payload = [
+        { eventId: currentEvent.id.toUpperCase(), materialId: "AAB97162-0352-4278-AC46-42E9ADFF6480", priceModifierPercentage: 1.6 }, // Mithril Armor
+        { eventId: currentEvent.id.toUpperCase(), materialId: "50EAC2F5-E958-4D85-96BF-B1E6CE8F6CEF", priceModifierPercentage: 1.5 }, // Narsil/Andúril
+        { eventId: currentEvent.id.toUpperCase(), materialId: "DF83D714-8063-4513-B164-5B0F4CDE8E32", priceModifierPercentage: 1.4 }, // Glamdring
+        { eventId: currentEvent.id.toUpperCase(), materialId: "38848F14-6218-48B3-93F3-5EB8D8E8290C", priceModifierPercentage: 1.3 }  // Healing Herb
+      ];
+    }
+    else if (currentEvent.id.toUpperCase() === "3CE7A51E-377B-4EFA-A407-350EDCC480DA") { // İnsanların Uyanışı - Hildórien
+      payload = [
+        { eventId: currentEvent.id.toUpperCase(), materialId: "7DF13FC9-EF52-4557-B46F-F49A99F6DEEB", priceModifierPercentage: 1.2 }, // Lembas Ekmeği
+        { eventId: currentEvent.id.toUpperCase(), materialId: "EA2BA953-8F05-4E09-91F9-B451B2E009EC", priceModifierPercentage: 1.1 }, // Ent-dalma
+        { eventId: currentEvent.id.toUpperCase(), materialId: "49835307-624E-496E-9F4B-2F7BD303C9BE", priceModifierPercentage: 1.0 }  // Thor'un Haritası
+      ];
+    }
+    else if (currentEvent.id.toUpperCase() === "0222DB79-0962-4F03-A7EC-4BB3262ACC83") { // Eärendil’in Valinor Yolculuğu
+      payload = [
+        { eventId: currentEvent.id.toUpperCase(), materialId: "1F9E4DC3-B08C-4DE6-8176-1CA0569A4B0C", priceModifierPercentage: 1.4 }, // Silmaril
+        { eventId: currentEvent.id.toUpperCase(), materialId: "7E4A69DD-1BD4-4AD7-BE17-A3A4AEB5E633", priceModifierPercentage: 1.3 }, // Palantir
+        { eventId: currentEvent.id.toUpperCase(), materialId: "A97C647D-13B0-40A6-8408-2F5727C3FA63", priceModifierPercentage: 1.2 }  // Nenya
+      ];
+    }
+    else if (currentEvent.id.toUpperCase() === "636B8352-5532-402D-8637-78E51EAD4BB2") { // Gondolin’in Kuruluşu
+      payload = [
+        { eventId: currentEvent.id.toUpperCase(), materialId: "DF83D714-8063-4513-B164-5B0F4CDE8E32", priceModifierPercentage: 1.2 }, // Glamdring
+        { eventId: currentEvent.id.toUpperCase(), materialId: "38848F14-6218-48B3-93F3-5EB8D8E8290C", priceModifierPercentage: 1.1 }, // Healing Herb
+        { eventId: currentEvent.id.toUpperCase(), materialId: "86FC53F3-2DED-47AA-92C1-08C43AF9EEFA", priceModifierPercentage: 1.0 }  // Elf Pelerini
+      ];
+    }
+    else if (currentEvent.id.toUpperCase() === "A697C80C-8C40-4C72-9048-7BA645CC1940") { // Öfke Savaşı
+      payload = [
+        { eventId: currentEvent.id.toUpperCase(), materialId: "99A6B2B7-F315-44B4-8C24-D243E8BBA0C7", priceModifierPercentage: 1.6 }, // Dark Flame
+        { eventId: currentEvent.id.toUpperCase(), materialId: "50EAC2F5-E958-4D85-96BF-B1E6CE8F6CEF", priceModifierPercentage: 1.4 }, // Narsil/Andúril
+        { eventId: currentEvent.id.toUpperCase(), materialId: "59EEF381-B96E-4F40-A493-37D45E19FFEF", priceModifierPercentage: 1.3 }  // Dragon Scale
+      ];
+    }
+    else if (currentEvent.id.toUpperCase() === "00BD37FF-2545-480A-823D-9E2EC22AF0C2") { // Melkor’un Zincirlenişi
+      payload = [
+        { eventId: currentEvent.id.toUpperCase(), materialId: "4AF36F26-55AE-43E0-8F4A-739627459398", priceModifierPercentage: 0.9 }, // Dokuz Yüzük
+        { eventId: currentEvent.id.toUpperCase(), materialId: "C5831423-1AAF-485E-89F0-371A74AB6657", priceModifierPercentage: 0.8 }  // Tek Yüzük
+      ];
+    }
+    else if (currentEvent.id.toUpperCase() === "E7AC0442-209E-4943-879A-AE98D65B4990") { // Silmarillerin Yaratılması
+      payload = [
+        { eventId: currentEvent.id.toUpperCase(), materialId: "1F9E4DC3-B08C-4DE6-8176-1CA0569A4B0C", priceModifierPercentage: 1.9 }, // Silmaril
+        { eventId: currentEvent.id.toUpperCase(), materialId: "A97C647D-13B0-40A6-8408-2F5727C3FA63", priceModifierPercentage: 1.2 }  // Nenya
+      ];
+    }
+    else if (currentEvent.id.toUpperCase() === "513BD536-FC89-4E19-A55F-E8F722C4CDE2") { // Fëanor’un Yemini
+      payload = [
+        { eventId: currentEvent.id.toUpperCase(), materialId: "1F9E4DC3-B08C-4DE6-8176-1CA0569A4B0C", priceModifierPercentage: 1.6 }, // Silmaril
+        { eventId: currentEvent.id.toUpperCase(), materialId: "99A6B2B7-F315-44B4-8C24-D243E8BBA0C7", priceModifierPercentage: 1.3 }  // Dark Flame
+      ];
+    }
+    else if (currentEvent.id.toUpperCase() === "EDE08A38-EA91-47D9-BB52-ED906A4D314F") { // Helcaraxë Geçişi
+      payload = [
+        { eventId: currentEvent.id.toUpperCase(), materialId: "86FC53F3-2DED-47AA-92C1-08C43AF9EEFA", priceModifierPercentage: 1.2 }, // Elf Pelerini
+        { eventId: currentEvent.id.toUpperCase(), materialId: "7DF13FC9-EF52-4557-B46F-F49A99F6DEEB", priceModifierPercentage: 1.1 }, // Lembas Ekmeği
+        { eventId: currentEvent.id.toUpperCase(), materialId: "EA2BA953-8F05-4E09-91F9-B451B2E009EC", priceModifierPercentage: 1.0 }  // Ent-dalma
+      ];
+    }
+    else if (currentEvent.id.toUpperCase() === "5CC877F2-78E4-4880-8F73-EFDC4EECCF2A") { // Fëanor’un Ölümü
+      payload = [
+        { eventId: currentEvent.id.toUpperCase(), materialId: "1F9E4DC3-B08C-4DE6-8176-1CA0569A4B0C", priceModifierPercentage: 1.5 }, // Silmaril
+        { eventId: currentEvent.id.toUpperCase(), materialId: "99A6B2B7-F315-44B4-8C24-D243E8BBA0C7", priceModifierPercentage: 1.4 }  // Dark Flame
+      ];
+    }
+
+
+            if (payload.length > 0) {
+              console.log("Gönderilecek payload:", payload);
+              await api.post(
+                "/api/Material/Modifyprices",
+                payload,
+                { headers: { "Content-Type": "application/json" } }
+              );
+              console.log("POST isteği gönderildi.");
+            } else {
+              console.log("Gönderilecek payload yok.");
+            }
+            lastProcessedEventId = currentEvent.id;
+          } else {
+            console.log("Event zaten işlendi:", currentEvent.id);
+          }
+        } else {
+          lastProcessedEventId = null;
+          console.log("Aktif event yok.");
+        }
+      } catch (error) {
+        console.error("Event kontrolünde hata:", error);
+      }
+    }
+
+
+
+        async function buyMaterial(index) {
+        	openTradeModal('buy', index);
+    }
+
+        async function sellMaterial(index) {
+        	openTradeModal('sell', index);
+    }
+
+
+
+    setInterval(checkAndTriggerEvent, 5000);
+
+    setInterval(checkAndTriggerEvent, 5000);
+    setInterval(fetchMaterials,5000);
+
+
+       async function init() {
+      await fetchEvents();
+      fetchMaterials();
+      getProfileData();
+      checkAndTriggerEvent();
+      setInterval(checkAndTriggerEvent, 60000);
+    }
+
+    init();
+</script>

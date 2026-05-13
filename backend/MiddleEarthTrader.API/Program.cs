@@ -1,0 +1,69 @@
+using MiddleEarthTrader.API;
+using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using MiddleEarthTrader.Repository.ContextDb;
+using MiddleEarthTrader.Repository.Interfaces;
+using MiddleEarthTrader.Repository.Repositories;
+using MiddleEarthTrader.Service.Interfaces;
+using MiddleEarthTrader.Service.Mapping;
+using MiddleEarthTrader.Service.Services;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
+
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<IMaterialService, MaterialService>();
+builder.Services.AddScoped<MaterialRepository>();
+builder.Services.AddScoped<IGameEventService, GameEventService>();
+builder.Services.AddScoped<GameEventRepository>();
+builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("https://localhost:7061", "http://localhost:5152")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
+
+var app = builder.Build();
+
+// Seed Dummy Data
+DbSeeder.SeedData(app);
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+app.UseCors("AllowFrontend");
+
+app.UseAuthorization();
+
+
+app.MapControllers();
+
+app.Run();

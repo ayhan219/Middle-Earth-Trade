@@ -1,0 +1,490 @@
+@{
+    ViewData["Title"] = "Profile";
+    Layout = "../Shared/_Layout.cshtml";
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portföyüm - Orta Dünya</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cinzel', serif;
+            /* Arka plan görseli + yarı saydam gradient */
+            background-image: linear-gradient(135deg, rgba(26,26,26,0.75) 0%, rgba(42,42,42,0.6) 50%, rgba(31,31,31,0.75) 100%), url('/images/profile.jpg');
+            background-size: cover, cover;
+            background-position: center, center;
+            background-repeat: no-repeat, no-repeat;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(101, 67, 33, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(139, 69, 19, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        .gold-text {
+            background: linear-gradient(45deg, #d4af37, #e6c547, #d4af37);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .portfolio-card {
+            background: linear-gradient(135deg, rgba(101, 67, 33, 0.3), rgba(139, 69, 19, 0.2));
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(184, 134, 11, 0.5);
+            box-shadow: 
+                inset 0 1px 0 rgba(212, 175, 55, 0.2),
+                0 6px 25px rgba(0, 0, 0, 0.4);
+        }
+        .material-item {
+            background: linear-gradient(135deg, rgba(101, 67, 33, 0.2), rgba(139, 69, 19, 0.15));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(184, 134, 11, 0.3);
+            transition: all 0.3s ease;
+        }
+        .material-item:hover {
+            background: linear-gradient(135deg, rgba(101, 67, 33, 0.25), rgba(139, 69, 19, 0.2));
+            border-color: rgba(212, 175, 55, 0.5);
+            transform: translateY(-1px);
+        }
+        .event-card {
+            background: linear-gradient(135deg, rgba(101, 67, 33, 0.6), rgba(139, 69, 19, 0.5));
+            border: 2px solid rgba(184, 134, 11, 0.7);
+            box-shadow: 
+                inset 0 2px 0 rgba(212, 175, 55, 0.2),
+                inset 0 -2px 0 rgba(0, 0, 0, 0.2),
+                0 6px 25px rgba(0, 0, 0, 0.4);
+            position: relative;
+        }
+        .event-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(139, 69, 19, 0.1) 2px,
+                    rgba(139, 69, 19, 0.1) 4px
+                );
+            pointer-events: none;
+        }
+        .gold-coin {
+            animation: spin 3s linear infinite;
+        }
+       
+        
+        .upcoming-event {
+            border-left: 4px solid #10b981;
+        }
+        .past-event {
+            border-left: 4px solid #6b7280;
+            opacity: 0.8;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-white">
+    <div class="container mx-auto px-4 py-8" style="margin-top:96px;">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-5xl font-bold gold-text mb-4">⚔️ My Portfolio ⚔️</h1>
+            <p class="text-xl text-amber-200">Manage your wealth in Middle Earth</p>
+        </div>
+        <!-- Altın Bakiyesi -->
+        <div class="portfolio-card rounded-2xl p-8 mb-8 text-center">
+            <div class="flex items-center justify-center mb-4">
+                <div class="gold-coin text-6xl mr-4">🪙</div>
+                <div>
+                    <h2 class="text-2xl font-semibold text-amber-200 mb-2">Gold Balance</h2>
+                    <div id="playerGold" class="stat-number gold-text">0</div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <div class="bg-black bg-opacity-30 rounded-lg p-4">
+                    <div class="text-green-400 text-xl font-semibold">+156</div>
+                    <div class="text-sm text-gray-300">Today's Earnings</div>
+                </div>
+                <div class="bg-black bg-opacity-30 rounded-lg p-4">
+                    <div class="text-blue-400 text-xl font-semibold">892</div>
+                    <div class="text-sm text-gray-300">This Week</div>
+                </div>
+                <div class="bg-black bg-opacity-30 rounded-lg p-4">
+                    <div class="text-purple-400 text-xl font-semibold">3,421</div>
+                    <div class="text-sm text-gray-300">Total Earnings</div>
+                </div>
+            </div>
+        </div>
+        <!-- Materyaller -->
+        <div class="portfolio-card rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold gold-text mb-6 text-center">📦 My Materials</h2>
+            <div id="materialsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- JS burayı dolduracak -->
+            </div>
+        </div>
+
+        <!-- Olaylar gizli: kodlar kalsın -->
+        <section class="profile-events hidden">
+            <h2 class="text-3xl font-bold gold-text mb-6 text-center">📅 Events</h2>
+            <div id="event-list" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- JS dinamik olarak dolduracak -->
+            </div>
+        </section>
+
+        <!-- Alt menü butonları kaldırıldı; üst navbar kullanılacak -->
+    </div>
+    <!-- Sell Modal -->
+    <div id="profileSellModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-60" onclick="closeProfileSellModal()"></div>
+        <div class="relative max-w-md mx-auto mt-40 portfolio-card rounded-lg p-6 bg-gray-900">
+            <h3 class="text-2xl font-bold gold-text">Sell Item</h3>
+            <div class="mt-4">
+                <div id="profileSellMaterialInfo" class="text-sm text-gray-300">Material info</div>
+                <div class="mt-4">
+                    <label for="profileSellQuantity" class="block text-sm text-amber-200 mb-1">Quantity</label>
+                    <input id="profileSellQuantity" type="number" min="1" value="1" class="w-full px-3 py-2 rounded-md bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-600" />
+                    <div id="profileSellTotal" class="text-sm text-gray-400 mt-2"></div>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-2">
+                <button class="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold" onclick="closeProfileSellModal()">Cancel</button>
+                <button class="px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-sm font-semibold" onclick="confirmProfileSell()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div id="profileAlertModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-60" onclick="closeProfileAlert()"></div>
+        <div class="relative max-w-md mx-auto mt-40 portfolio-card rounded-lg p-6 bg-gray-900">
+            <h3 class="text-2xl font-bold gold-text">Information</h3>
+            <div id="profileAlertMessage" class="mt-4 text-gray-200"></div>
+            <div class="mt-6 flex justify-end">
+                <button class="px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-sm font-semibold" onclick="closeProfileAlert()">OK</button>
+            </div>
+        </div>
+    </div>
+</body>
+<!-- Axios and api.js are loaded from _Layout -->
+<script>
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function sellMaterial(name) {
+      console.log("Material to sell:", name);
+    }
+
+    let profileSellContext = { name: null, qty: 0, unitPrice: 0 };
+
+    function openProfileSellModal(nameEnc, maxQty, unitPrice) {
+      const name = decodeURIComponent(nameEnc);
+      profileSellContext = { name, qty: maxQty, unitPrice: unitPrice || 0 };
+      const infoEl = document.getElementById('profileSellMaterialInfo');
+      const qtyInput = document.getElementById('profileSellQuantity');
+      const totalEl = document.getElementById('profileSellTotal');
+      infoEl.textContent = `${name} — Your quantity: ${maxQty} • Current price: ${unitPrice} gold`;
+      qtyInput.value = 1;
+      qtyInput.min = 1;
+      qtyInput.max = maxQty;
+      qtyInput.oninput = updateProfileSellTotal;
+      updateProfileSellTotal();
+      document.getElementById('profileSellModal').classList.remove('hidden');
+    }
+
+    function closeProfileSellModal() {
+      document.getElementById('profileSellModal').classList.add('hidden');
+    }
+
+    function updateProfileSellTotal() {
+      const qty = parseInt(document.getElementById('profileSellQuantity').value) || 0;
+      const total = qty * (profileSellContext.unitPrice || 0);
+      document.getElementById('profileSellTotal').textContent = `Total revenue: ${total} gold`;
+    }
+
+    function profileShowAlert(message) {
+      const m = document.getElementById('profileAlertModal');
+      document.getElementById('profileAlertMessage').textContent = message;
+      m.classList.remove('hidden');
+    }
+
+    function closeProfileAlert() {
+      document.getElementById('profileAlertModal').classList.add('hidden');
+    }
+
+    async function confirmProfileSell() {
+      const qtyRaw = document.getElementById('profileSellQuantity').value;
+      const quantity = parseInt(qtyRaw);
+      if (!quantity || isNaN(quantity) || quantity <= 0) {
+        profileShowAlert('Enter a valid quantity.');
+        return;
+      }
+      if (quantity > profileSellContext.qty) {
+        profileShowAlert('The quantity you want to sell exceeds your inventory. Please enter a lower quantity.');
+        return;
+      }
+
+      try {
+        const playerId = localStorage.getItem('id');
+        if (!playerId) {
+          profileShowAlert('You must log in!');
+          return;
+        }
+
+        // Envanterden materialId'yi bul
+        const inventoryRes = await api.get(`/api/users/profile/${playerId}`);
+        const invList = (inventoryRes.data && Array.isArray(inventoryRes.data.inventories)) ? inventoryRes.data.inventories : [];
+        const found = invList.find(x => (x.materialName || x.name) === profileSellContext.name);
+        const materialId = found && (found.materialId || found.id);
+        if (!materialId) {
+          profileShowAlert('Material not found. Please refresh the page.');
+          return;
+        }
+
+        const payload = { userId: playerId, materialId: materialId, quantity };
+        const response = await api.post(`/api/Material/sell`, payload, { headers: { 'Content-Type': 'application/json' } });
+
+        if (response.status === 200) {
+          const total = quantity * (profileSellContext.unitPrice || 0);
+          profileShowAlert(`Successfully sold ${quantity} of ${profileSellContext.name}. Total revenue: ${total} gold.`);
+          closeProfileSellModal();
+          getProfileData();
+        } else {
+          profileShowAlert('Sale failed!');
+        }
+      } catch (err) {
+        console.error('Profile sell error:', err);
+        if (err.response && err.response.data) {
+          const msg = typeof err.response.data === 'string' ? err.response.data : 'Sale could not be completed.';
+          profileShowAlert(msg);
+        } else {
+          profileShowAlert('An error occurred!');
+        }
+      }
+    }
+
+    function getProfileData() {
+      try {
+        const playerId = localStorage.getItem("id");
+        if (!playerId) {
+          console.warn("Player ID not found.");
+          if (typeof showNotification === 'function') showNotification("Player ID not found, please login.", "error");
+          return;
+        }
+
+        api.get(`/api/users/profile/${playerId}`)
+          .then(res => {
+            const player = res.data || {};
+            const nameEl = document.getElementById('playerName');
+            if (nameEl) nameEl.textContent = player.username || player.userName || '';
+
+            const goldEl = document.getElementById('playerGold');
+            const goldNum = Number(player.gold) || 0;
+            if (goldEl) goldEl.textContent = goldNum.toLocaleString();
+
+            const container = document.getElementById('materialsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const inventories = Array.isArray(player.inventories) ? player.inventories : [];
+
+            if (inventories.length === 0) {
+              container.innerHTML = `<p class="text-gray-400 text-center col-span-full">You have no materials.</p>`;
+              return;
+            }
+
+            function getMaterialIcon(name){
+              const n = (name || '').toLowerCase();
+              if (n.includes('harita') || n.includes('map')) return '🗺️';
+              if (n.includes('kitap') || n.includes('book') || n.includes('mazarbul') || n.includes('yazıt') || n.includes('yazit') || n.includes('iskenderun')) return '📜';
+              if (n.includes('zırh') || n.includes('zirh') || n.includes('armor') || n.includes('gömlek') || n.includes('gomlek') || n.includes('chain')) return '🛡️';
+              if (n.includes('sword') || n.includes('kılıç') || n.includes('kilic') || n.includes('glamdring') || n.includes('narsil') || n.includes('andúril') || n.includes('anduril') || n.includes('sting') || n.includes('stıng') || n.includes('orcrist') || n.includes('orcrıst')) return '🗡️';
+              if (n.includes('elf') && (n.includes('pelerini') || n.includes('cloak'))) return '🧝';
+              if (n.includes('elf') && (n.includes('yay') || n.includes('bow'))) return '🏹';
+              if (n.includes('vilya')) return '💠';
+              if (n.includes('narya')) return '🔥';
+              if (n.includes('silmaril')) return '💎';
+              if (n.includes('mithril')) return '⚔️';
+              if (n.includes('palant')) return '🔮';
+              if ((n.includes('dokuz') && n.includes('yüzük')) || (n.includes('tek') && n.includes('yüzük')) || (n.includes('yedi') && n.includes('yüzük')) || (n.includes('ring'))) return '💍';
+              if (n.includes('gümüş') || n.includes('silver')) return '🥈';
+              if (n.includes('altın') || n.includes('altin') || n.includes('gold')) return '🪙';
+              if (n.includes('lembas')) return '🥖';
+              if (n.includes('dark') && n.includes('flame')) return '🔥';
+              if (n.includes('dragon')) return '🐉';
+              if (n.includes('nenya')) return '💠';
+              if (n.includes('arkenstone')) return '💎';
+              if (n.includes('miruvor') || n.includes('mıruvor')) return '🍷';
+              if (n.includes('healing') || n.includes('herb') || n.includes('ent-dalma') || n.includes('ent')) return '🌿';
+              return '📦';
+            }
+
+            inventories.forEach(item => {
+              const name = item.materialName || item.name || 'Unknown';
+              const icon = getMaterialIcon(name);
+              const qty = parseInt(item.quantity) || 0;
+              const avg = parseFloat(item.averagePurchasePrice) || 0;
+              const currentPrice = parseFloat(item.currentPrice);
+              const totalValue = avg * qty;
+
+              const card = document.createElement('div');
+              card.className = 'material-item rounded-lg p-4';
+              card.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center">
+                    <span class="text-2xl mr-3">${icon}</span>
+                    <span class="font-semibold">${escapeHtml(name)}</span>
+                  </div>
+                  <div class="flex items-center">
+                    <span class="text-amber-400 font-bold mr-3">x${qty}</span>
+                  </div>
+                </div>
+                <div class="text-sm text-gray-300">Value: ${currentPrice.toLocaleString()}</div>
+                <div class="text-xs text-green-400 mt-1">Avg. Buy: ${avg.toLocaleString()}</div>
+                <div class="mt-3 flex justify-end">
+                  <button class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg text-sm font-semibold" onclick="openProfileSellModal('${encodeURIComponent(name)}', ${qty}, ${currentPrice})">Sell</button>
+                </div>
+              `;
+
+ 
+              
+
+              container.appendChild(card);
+            });
+          })
+          .catch(err => {
+            console.error("Could not fetch profile data:", err);
+            if (typeof showNotification === 'function') showNotification("Could not fetch player data.", "error");
+          });
+
+      } catch (err) {
+        console.error("getProfileData error:", err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', getProfileData);
+
+       async function fetchEvents() {
+        try {
+            const response = await api.get(`/api/GameEvent`);
+            if (!response.ok) throw new Error("Events could not be fetched");
+
+            const events = await response.json();
+
+            console.log(events)
+            // Event listesini render et
+            renderEvents(events);
+        } catch (error) {
+            console.error("Event loading error:", error);
+        }
+    }
+
+            function renderEvents(events) {
+        const eventContainer = document.getElementById("event-list");
+        eventContainer.innerHTML = ""; 
+
+        if (!events || events.length === 0) {
+            eventContainer.innerHTML = "<p class='text-gray-400 text-center col-span-full'>No events.</p>";
+            return;
+        }
+
+        const now = new Date();
+
+        events.forEach(event => {
+            const start = event.startDate ? new Date(event.startDate) : null;
+            const end = event.endDate ? new Date(event.endDate) : null;
+
+            let statusText = "Yaklaşan";
+            let statusColor = "text-blue-400";
+            let icon = "🔜";
+
+            if (start && end) {
+                if (now < start) {
+                    statusText = "Yaklaşan";
+                    statusColor = "text-blue-400";
+                    icon = "🔜";
+                } else if (now >= start && now <= end) {
+                    statusText = "Devam Ediyor";
+                    statusColor = "text-green-400";
+                    icon = "⏰";
+                } else {
+                    statusText = "Tamamlandı";
+                    statusColor = "text-gray-400";
+                    icon = "📜";
+                }
+            }
+
+            const formattedDate = start
+                ? start.toLocaleString('tr-TR', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })
+                : 'Bilinmiyor';
+
+            const card = document.createElement("div");
+            card.className = `event-card rounded-2xl p-6 ${statusText === 'Tamamlandı' ? 'past-event' : 'upcoming-event'}`;
+
+            card.innerHTML = `
+                <h3 class="text-2xl font-bold ${statusColor} mb-4 flex items-center">
+                    <span class="mr-3">${icon}</span>
+                    ${statusText}
+                </h3>
+                <div class="bg-black bg-opacity-40 rounded-lg p-4">
+                    <h4 class="text-xl font-semibold text-amber-200 mb-2">${escapeHtml(event.name)}</h4>
+                    <p class="text-gray-300 mb-3">${escapeHtml(event.description)}</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-400">Başlangıç:</span>
+                        <span class="${statusColor} font-semibold">${formattedDate}</span>
+                    </div>
+                </div>
+            `;
+
+            eventContainer.appendChild(card);
+        });
+    }
+
+
+    document.addEventListener("DOMContentLoaded", () => {
+        fetchEvents();
+        getProfileData();
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+    const API_BASE_URL = "@ViewBag.ApiBaseUrl";
+    const api = axios.create({
+        baseURL: API_BASE_URL
+    });
+</script>
+
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MiddleEarthTraderFront</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/MiddleEarthTraderFront.styles.css" asp-append-version="true" />
+</head>
+<body style="margin: 0; padding: 0;">
+    @if (Context.Request.Path.ToString().ToLower().Contains("/events"))
+    {
+        <header class="main-header compact-header">
+            <nav class="navbar container">
+                <div class="logo">Middle Earth Trading</div>
+                <ul class="nav-links">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/Home/Trader">Market</a></li>
+                    <li><a href="/Profile">Profile</a></li>
+                    <li><a href="/Events">Events</a></li>
+                </ul>
+                <div class="auth-buttons" id="auth-buttons-container" style="display:flex; gap: 10px;">
+                </div>
+            </nav>
+        </header>
+    }
+    else if (!(Context.Request.Path == "/" || Context.Request.Path.ToString().ToLower().Contains("/home/index")))
+    {
+        <header class="main-header">
+            <nav class="navbar container">
+                <div class="logo">Middle Earth Trading</div>
+                <ul class="nav-links">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/Home/Trader">Market</a></li>
+                    <li><a href="/Profile">Profile</a></li>
+                    <li><a href="/Events">Events</a></li>
+                </ul>
+                <div class="auth-buttons" id="auth-buttons-container" style="display:flex; gap: 10px;">
+                </div>
+            </nav>
+        </header>
+    }
+    @RenderBody()
+    <audio id="site-muzik" src="~/music/site-muzik.mp3" loop preload="auto" style="display:none;"></audio>
+    <div id="muzik-kontrol" style="position:fixed;top:20px;left:20px;z-index:9999;">
+        <button id="muzik-toggle" title="Müzik" style="width:48px;height:48px;border:none;border-radius:50%;background:#222;color:#ffd166;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px #000a;cursor:pointer;font-size:22px;">🔊</button>
+    </div>
+    <script>
+        window.API_BASE_URL = '@Configuration["Api:BaseUrl"]';
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="~/js/api.js" asp-append-version="true"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+    <script>
+        // Cookie helpers (global)
+        function setCookie(name, value, days){
+            var expires = '';
+            if(typeof days === 'number'){
+                var d = new Date();
+                d.setTime(d.getTime() + (days*24*60*60*1000));
+                expires = '; expires=' + d.toUTCString();
+            }
+            var secure = location.protocol === 'https:' ? '; Secure' : '';
+            document.cookie = name + '=' + encodeURIComponent(value) + expires + '; path=/' + '; SameSite=Lax' + secure;
+        }
+        function getCookie(name){
+            var match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'));
+            return match ? decodeURIComponent(match[1]) : null;
+        }
+        function deleteCookie(name){ setCookie(name, '', -1); }
+        // Lightweight AES-GCM encryption helpers (client-side obfuscation; not a substitute for server tokens)
+        (function(){
+            var PASS_PHRASE = 'met@client-side-secret-01';
+            var SALT_TEXT = 'met_static_salt_v1';
+            var enc = new TextEncoder();
+            function toB64(buf){ return btoa(String.fromCharCode.apply(null, new Uint8Array(buf))); }
+            function fromB64(b64){ var bin = atob(b64); var len = bin.length; var bytes = new Uint8Array(len); for(var i=0;i<len;i++) bytes[i]=bin.charCodeAt(i); return bytes; }
+            async function importKey(){
+                var keyMaterial = await crypto.subtle.importKey('raw', enc.encode(PASS_PHRASE), 'PBKDF2', false, ['deriveKey']);
+                return crypto.subtle.deriveKey({name:'PBKDF2', salt: enc.encode(SALT_TEXT), iterations: 100000, hash:'SHA-256'}, keyMaterial, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+            }
+            window.encryptText = async function(text){
+                var key = await importKey();
+                var iv = crypto.getRandomValues(new Uint8Array(12));
+                var cipher = await crypto.subtle.encrypt({name:'AES-GCM', iv: iv}, key, enc.encode(text));
+                return toB64(iv) + ':' + toB64(cipher);
+            };
+            window.decryptText = async function(payload){
+                if(!payload || payload.indexOf(':')<0) return null;
+                var parts = payload.split(':');
+                var iv = fromB64(parts[0]);
+                var data = fromB64(parts[1]);
+                var key = await importKey();
+                try{
+                    var plain = await crypto.subtle.decrypt({name:'AES-GCM', iv: iv}, key, data);
+                    return new TextDecoder().decode(new Uint8Array(plain));
+                }catch(e){ return null; }
+            };
+            window.setEncryptedCookie = async function(name, text, days){
+                var encrypted = await window.encryptText(String(text));
+                setCookie(name, encrypted, days);
+            };
+            window.getDecryptedCookie = async function(name){
+                var raw = getCookie(name);
+                if(!raw) return null;
+                return await window.decryptText(raw);
+            };
+        })();
+    </script>
+    <script>
+        (function(){
+        const muzik = document.getElementById('site-muzik');
+            if(!muzik) return;
+
+            // Persist keys
+            const KEY_TIME = 'site_muzik_time';
+            const KEY_VOL = 'site_muzik_volume';
+            const KEY_PAUSED = 'site_muzik_paused';
+
+            // Restore volume
+            const savedVol = parseFloat(localStorage.getItem(KEY_VOL));
+            muzik.volume = isNaN(savedVol) ? 0.7 : Math.max(0, Math.min(1, savedVol));
+
+            // Restore time when metadata is ready
+            const savedTime = parseFloat(localStorage.getItem(KEY_TIME));
+            const applySavedTime = function(){
+                if(!isNaN(savedTime) && savedTime > 0){
+                    try { muzik.currentTime = savedTime; } catch(e) {}
+                }
+            };
+            if (muzik.readyState > 0) { applySavedTime(); }
+            else { muzik.addEventListener('loadedmetadata', applySavedTime, { once: true }); }
+
+            // Restore play/pause state
+            const shouldBePaused = localStorage.getItem(KEY_PAUSED) === 'true';
+            const tryPlay = function(){
+                if(shouldBePaused) return; // stay paused
+                const playPromise = muzik.play();
+                if (playPromise && typeof playPromise.then === 'function') {
+                    playPromise.catch(function(){ /* autoplay engellenirse kullanıcı ikona basar */ });
+                }
+            };
+            // Autoplay only after we set time
+            if (muzik.readyState > 0) { tryPlay(); }
+            else { muzik.addEventListener('loadeddata', tryPlay, { once: true }); }
+
+            // Persist periodically
+            let lastSaved = 0;
+            muzik.addEventListener('timeupdate', function(){
+                const now = Date.now();
+                if (now - lastSaved > 1000){
+                    localStorage.setItem(KEY_TIME, String(muzik.currentTime));
+                    lastSaved = now;
+                }
+            });
+            window.addEventListener('beforeunload', function(){
+                localStorage.setItem(KEY_TIME, String(muzik.currentTime));
+                localStorage.setItem(KEY_VOL, String(muzik.volume));
+                localStorage.setItem(KEY_PAUSED, String(muzik.paused));
+            });
+            muzik.addEventListener('play', function(){ localStorage.setItem(KEY_PAUSED, 'false'); updateIcon(); });
+            muzik.addEventListener('pause', function(){ localStorage.setItem(KEY_PAUSED, 'true'); updateIcon(); });
+
+            // UI (only on home where button exists)
+            const btn = document.getElementById('muzik-toggle');
+            function updateIcon(){ if(!btn) return; btn.textContent = muzik.paused ? '▶️' : '🔊'; }
+            if (btn){
+                btn.addEventListener('click', function(){
+                    if(muzik.paused){ muzik.play(); }
+                    else { muzik.pause(); }
+                });
+                updateIcon();
+            }
+        })();
+    </script>
+</body>
+</html>
