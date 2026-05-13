@@ -94,9 +94,7 @@ Fully localized English interface across all views, modals, alerts, and API resp
 
 <div align="center">
 
-### 🏠 Landing Page
-<!-- Replace with your screenshot -->
-![Landing Page](docs/images/screenshot-1.png)
+
 
 <br />
 
@@ -113,6 +111,10 @@ Fully localized English interface across all views, modals, alerts, and API resp
 </div>
 
 <br />
+
+### 🏠 Events
+<!-- Replace with your screenshot -->
+![Landing Page](docs/images/screenshot-1.png)
 
 ## 🏛️ Architecture
 
